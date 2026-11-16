@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>아르카나</title>
+  <script type="module">
+// Unpacks a gzip payload kept in a .wasm custom section (scripts/pack.mjs).
+async function inflate(gz) {
+  if (typeof DecompressionStream === 'function') return new Uint8Array(await new Response(new Blob([gz]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+  const f = window.fflate ?? await new Promise((ok, no) => { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js'; s.onload = () => ok(window.fflate); s.onerror = no; document.head.appendChild(s); });
+  return f.gunzipSync(gz);
+}
+window.__unpack = async (url) => {
+  const b = new Uint8Array(await (await fetch(url)).arrayBuffer());
+  let i = 9;
+  const leb = () => { let n = 0, s = 0, x; do { x = b[i++]; n += (x & 127) * 2 ** s; s += 7; } while (x & 128); return n; };
+  const size = leb(), end = i + size;
+  const nameLen = leb();
+  i += nameLen;
+  return inflate(b.subarray(i, end));
+};
+const js = await window.__unpack('./assets/app-b916eda7.wasm');
+await import(URL.createObjectURL(new Blob([js], { type: 'text/javascript' })));
+</script>
+  <link rel="stylesheet" crossorigin href="./assets/index-DPUDeVpt.css">
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div id="ui"></div>
+  <div id="title">
+    <div class="t-rings"><i></i><i></i><i></i></div>
+    <div class="t-kicker">ARKANA SCIENCE INVESTIGATION</div>
+    <div class="t-logo"><span style="animation-delay:.4s">A</span><span style="animation-delay:.55s">R</span><span style="animation-delay:.7s">K</span><span style="animation-delay:.85s">A</span><span style="animation-delay:1s">N</span><span style="animation-delay:1.15s">A</span></div>
+    <div class="t-sub">아르카나 · 균열 도시</div>
+    <div class="t-tag">과학으로 숨 쉬는 도시에서, 아무도 설명하지 못한 일들이 시작된다.</div>
+    <div class="t-menu"><div class="t-load">도시를 불러오는 중…<i></i></div></div>
+    <div class="t-foot">ASI · 아르카나 과학 수사국</div>
+  </div>
+</body>
+</html>
